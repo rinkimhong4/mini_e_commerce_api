@@ -1,0 +1,14 @@
+{
+  "data": {
+    "product_id": 17,
+    "name": "iPhone 17 Pro",
+    "price": "1199.00",
+    "description": "Latest Apple iPhone",
+    "image": "1768412698372.png",
+    "category": "Electronics",
+    "stock": 10,
+    "createdAt": "2026-01-14T17:44:58.000Z",
+    "updatedAt": "2026-01-14T17:44:58.000Z"
+  },
+  "deletedAt": "2026-01-14T17:45:17.627Z"
+}

@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "message": "Product deleted successfully",
+  "data": {
+    "product_id": 16,
+    "name": "iPhone 17 Pro",
+    "price": "1199.00",
+    "description": "Latest Apple iPhone",
+    "image": "1768412456586.png",
+    "category": "Electronics",
+    "stock": 10,
+    "createdAt": "2026-01-14T17:40:56.000Z",
+    "updatedAt": "2026-01-14T17:40:56.000Z"
+  },
+  "deletedAt": "2026-01-14T17:41:00.889Z"
+}
