@@ -11,14 +11,22 @@ const Order = sequelize.define("Order", {
     },
     total: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false
+      allowNull: false,
+      validate: {
+        min: 0
+      }
     },
     status: {
       type: DataTypes.ENUM("pending", "confirmed", "shipped", "delivered"),
-      defaultValue: "pending"
+      defaultValue: "pending",
+      allowNull: false
     },
     address: {
       type: DataTypes.STRING,
+      allowNull: false
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
       allowNull: false
     }
   }, {
@@ -27,8 +35,8 @@ const Order = sequelize.define("Order", {
   });
 
   Order.associate = (models) => {
-    Order.belongsTo(models.User, { foreignKey: "user_id" });
-    Order.hasMany(models.OrderItem, { foreignKey: "order_id" });
+    Order.belongsTo(models.User, { foreignKey: "user_id", as: "User" });
+    Order.hasMany(models.OrderItem, { foreignKey: "order_id", as: "OrderItems" });
   };
 
   module.exports = Order;

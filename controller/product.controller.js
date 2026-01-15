@@ -2,6 +2,7 @@ const { Op } = require("sequelize");
 const fs = require('fs');
 const path = require('path');
 const Product = require("../models/product.model");
+const Category = require("../models/category.model");
 const upload = require("../middleware/upload");
 
 const { logError } = require("../service/logs.service");
@@ -12,7 +13,9 @@ const { logDeletedProduct } = require("../service/deletedProductLogger");
  */
 exports.getAllProduct = async (req, res) => {
   try {
-    const data = await Product.findAll();
+    const data = await Product.findAll({
+      // include: [{ model: Category, as: 'Category' }]
+    });
     res.status(200).json({
       statusCode: 200,
       message: "Get Data Successfully",
@@ -56,13 +59,12 @@ exports.getProductByID = async (req, res) => {
 /**
  * CREATE PRODUCT
  */
-
 exports.createProduct = async (req, res) => {
   try {
-    const { name, price, description, category, stock } = req.body;
+    const { name, price, description, category_id, stock } = req.body;
 
     // Validation: All fields required
-    if (!name || !price || !description || !category || stock === undefined || stock === null) {
+    if (!name || !price || !description || !category_id || stock === undefined || stock === null) {
       // If file was uploaded, delete it
       if (req.file) {
         fs.unlink(req.file.path, (err) => {
@@ -94,7 +96,7 @@ exports.createProduct = async (req, res) => {
       price,
       description,
       image: req.file ? req.file.filename : null,
-      category,
+      category_id,
       stock,
     });
 
@@ -122,8 +124,6 @@ exports.createProduct = async (req, res) => {
 /**
  * UPDATE PRODUCT
  */
-
-
 exports.updateProduct = async (req, res) => {
   try {
     upload.single("image")(req, res, async (err) => {
@@ -137,19 +137,21 @@ exports.updateProduct = async (req, res) => {
         return res.status(400).json({ message: "ID must be a positive integer" });
       }
 
-      const product = await Product.findByPk(id);
+      const product = await Product.findByPk(id, {
+        // include: [{ model: Category, as: 'Category' }]
+      });
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
       }
 
-      const { name, price, description, category, stock } = req.body;
+      const { name, price, description, category_id, stock } = req.body;
       const image = req.file ? req.file.filename : product.image;
 
       await product.update({
         name: name ?? product.name,
         price: price ?? product.price,
         description: description ?? product.description,
-        category: category ?? product.category,
+        category_id: category_id ?? product.category_id,
         stock: stock ?? product.stock,
         image,
       });
@@ -170,12 +172,11 @@ exports.updateProduct = async (req, res) => {
 /**
  * DELETE PRODUCT
  */
-
 exports.deleteProduct = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = Number(req.params.id);
 
-    if (!Number.isInteger(Number(id)) || id <= 0) {
+    if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({ message: "ID must be a positive integer" });
     }
 
@@ -185,21 +186,36 @@ exports.deleteProduct = async (req, res) => {
     }
 
     // -------- IMAGE BACKUP --------
-    const imagePath = path.join(__dirname, "../public/images", product.image);
-    const backupDir = path.join(__dirname, "../public/deleted-products");
+    if (product.image) {
+      const imagePath = path.join(
+        __dirname,
+        "../public/images",
+        product.image
+      );
 
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir, { recursive: true });
-    }
+      const backupDir = path.join(
+        __dirname,
+        "../public/deleted-products"
+      );
 
-    if (product.image && fs.existsSync(imagePath)) {
-      const backupFileName = `${Date.now()}_${product.image}`;
-      fs.renameSync(imagePath, path.join(backupDir, backupFileName));
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+
+      if (fs.existsSync(imagePath)) {
+        const backupFileName = `${Date.now()}_${product.image}`;
+        fs.renameSync(
+          imagePath,
+          path.join(backupDir, backupFileName)
+        );
+      }
     }
 
     logDeletedProduct(product);
 
-    await Product.destroy({ where: { product_id: id } });
+    await Product.destroy({
+      where: { product_id: id }
+    });
 
     res.status(200).json({
       statusCode: 200,
@@ -216,11 +232,9 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-
 /**
  * SEARCH PRODUCT BY NAME
  */
-
 exports.searchProduct = async (req, res) => {
   try {
     const { name } = req.query;
@@ -232,9 +246,10 @@ exports.searchProduct = async (req, res) => {
     const products = await Product.findAll({
       where: {
         name: {
-          [Op.like]: `%${name}%` // Partial match
+          [Op.like]: `%${name}%` 
         }
-      }
+      },
+      // include: [{ model: Category, as: 'Category' }]
     });
 
     res.status(200).json({
