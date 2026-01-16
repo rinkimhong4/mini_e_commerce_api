@@ -10,6 +10,10 @@ var usersRouter = require('./routes/users');
 const productRoute = require('./routes/product.route');
 const orderRoute = require('./routes/order.route');
 const cartRoute = require('./routes/cart.route');
+const rateLimiter = require("./middleware/rateLimit");
+const {categories} = require("./routes/category.route");
+
+
 
 // Load models and associations
 const db = require('./models');
@@ -17,19 +21,18 @@ const db = require('./models');
 var app = express();
 // Allow all origins (useful for mobile apps)
 
-app.use(cors());
 
-// OR restrict to specific origins (for web)
-var corsOptions = {
-   origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
-    optionsSuccessStatus: 200
-};
+//  Allow specific origins
+app.use(cors({
+  origin: "*", // Flutter app
+  methods: ["GET", "POST", "PUT", "DELETE"]
+}));
 
-app.use(cors(corsOptions));
+// 
+const helmet = require("helmet");
+app.use(helmet());
 
-
-app.use(express.json()) // for parsing application/json
-app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+app.use(rateLimiter);
 
 
 // view engine setup
@@ -52,6 +55,7 @@ app.use('/users', usersRouter);
 app.use('', productRoute);
 app.use('/', orderRoute);
 app.use('/', cartRoute);
+categories(app);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

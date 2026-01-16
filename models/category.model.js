@@ -12,14 +12,21 @@ const Category = sequelize.define("Category", {
     allowNull: false,
     unique: true
   },
+  categoryicon: DataTypes.STRING,
   description: DataTypes.TEXT
 }, {
   tableName: "categories",
-  timestamps: true
+  timestamps: true,
+  // paranoid: true,
 });
 
 Category.associate = (models) => {
-  Category.hasMany(models.Product, { foreignKey: "category_id", as: "Products" });
+  Category.hasMany(models.Product, {
+    foreignKey: "category_id", as: "Products",
+    onDelete: "CASCADE",
+  
+  });
 };
+
 
 module.exports = Category;

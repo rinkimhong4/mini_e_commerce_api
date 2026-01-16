@@ -1,5 +1,6 @@
 const { verifySignUp } = require("../middleware");
 const controller = require("../controller/auth.controller");
+const { body } = require("express-validator");
 
 module.exports = function(app) {
   app.use(function(req, res, next) {
@@ -16,6 +17,8 @@ module.exports = function(app) {
       verifySignUp.checkDuplicateUsernameOrEmail,
       verifySignUp.checkRolesExisted
     ],
+    body("username").notEmpty(),
+    body("password").isLength({ min: 6 }),
     controller.signup
   );
 
